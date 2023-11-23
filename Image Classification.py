@@ -6,6 +6,8 @@ import os
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv2D, MaxPooling2D, Dense, Flatten, Dropout
 from tensorflow.keras.metrics import Precision, Recall, BinaryAccuracy
+from tensorflow.keras.models import load_model
+
 
 
 gpus = tf.config.experimental.list_physical_devices('GPU')
@@ -67,14 +69,10 @@ test_size = int(len(data)*.1)
 train = data.take(train_size)
 val = data.skip(train_size).take(val_size)
 test = data.skip(train_size+val_size).take(test_size)
+
+#Building model
 train
-
-
-
 model = Sequential()
-
-model = Sequential()
-
 model.add(Conv2D(16, (3,3), 1, activation='relu', input_shape=(256,256,3)))
 model.add(MaxPooling2D())
 model.add(Conv2D(32, (3,3), 1, activation='relu'))
@@ -111,7 +109,7 @@ plt.legend(loc="upper left")
 plt.show()
 
 
-
+#Evaluating model
 pre = Precision()
 re = Recall()
 acc = BinaryAccuracy()
@@ -125,3 +123,26 @@ for batch in test.as_numpy_iterator():
 print(pre.result(), re.result(), acc.result())
 
 
+
+#Testing Model
+image_path = '/Users/axwakabayashi/Desktop/CNN-Breast-Cancer-Classifier/15902_idx5_x2751_y751_class1.png'
+img = Image.open(image_path)
+plt.imshow(img)
+plt.show()
+
+resize = tf.image.resize(img, (256,256))
+plt.imshow(resize.numpy().astype(int))
+plt.show()
+
+yhat = model.predict(np.expand_dims(resize/255, 0))
+if yhat > 0.5:
+    print(f'Cancer is detected')
+else:
+    print(f'No cancer is detected')
+
+
+#Saving model
+model.save('/Users/axwakabayashi/Desktop/CNN-Breast-Cancer-Classifier/models/imageclassifier.Keras')
+new_model = load_model('/Users/axwakabayashi/Desktop/CNN-Breast-Cancer-Classifier/models/imageclassifier.Keras')
+model.save(os.path.join('/Users/axwakabayashi/Desktop/CNN-Breast-Cancer-Classifier/models/imageclassifier.Keras'))
+new_model.predict(np.expand_dims(resize/255, 0))
